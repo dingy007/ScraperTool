@@ -13,8 +13,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 public class ScraperBase {
-	
+
 	public String queryHTML (HttpURLConnection httpConnection) {
 		String queriedHTML = "";
 		InputStreamReader connectionStreamReader = null;
@@ -43,47 +46,37 @@ public class ScraperBase {
 	}
 
 	public void initiateQuery(Path outputFileLocation) {
-		URI queryUri=null;
-		try {
-			queryUri = new URI("");
-		} catch (URISyntaxException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		String	queryUri = "http://sgwiki.com/wiki/Simei_MRT_Station";
 		int timeout = 5*1000; //timeout for HTTP connection, in ms
 
 		ParseHTML parsehtml = new ParseHTML();
 		Map<String, String> mappedData = new HashMap<String, String>();
-//		InputStreamReader connectionStreamReader = null;
+		Document queriedHTML = null;
 
-			String queriedHTML = "";
+		System.out.println("URI: " + queryUri);
 
-			System.out.println("URI: " + queryUri.toString());
-			//Ensure that all the Query Codes are set for each Stock
-			//The query codes will be used to identify the <key, value> pair from the Map mappedData <String, String>()
+		try {
+			queriedHTML = Jsoup.connect(queryUri)
+					.data("query", "Java")
+					.userAgent("Mozilla/4.76")
+					//						  .cookie("auth", "token")
+					.timeout(timeout)
+					.get();
+			//				System.out.println("queried data \n" + queriedHTML.toString());
+			mappedData = parsehtml.searchFoVal(queriedHTML.toString());
+			System.out.println(mappedData.keySet().toString());
 
-			try {
-				HttpURLConnection httpConnection = (HttpURLConnection) queryUri.toURL().openConnection();
-				httpConnection.setConnectTimeout(timeout);
-				httpConnection.setRequestMethod("GET");
-				httpConnection.addRequestProperty("User-Agent", "Mozilla/4.76");
-				
-				queriedHTML = queryHTML(httpConnection);
-//				System.out.println("queried data \n" + queriedHTML.toString());
-				mappedData = parsehtml.searchFoVal(queriedHTML);
-				System.out.println(mappedData.keySet().toString());
-
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-//		userRequestedData = getRequireDataOnly(stockList, requiredParameters, outputFileLocation);
-//		WriteToCSV.WriteDataToCSV(outputFileLocation, userRequestedData);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//		userRequestedData = getRequireDataOnly(stockList, requiredParameters, outputFileLocation);
+		//		WriteToCSV.WriteDataToCSV(outputFileLocation, userRequestedData);
 	}
 
-	
-	
+
+
 	public static void main(String[] args) {
 		System.out.println("Starting the scraper...");
 		Path outputPath = new File("/home/dineshkp/Desktop/gitlocal").toPath();
